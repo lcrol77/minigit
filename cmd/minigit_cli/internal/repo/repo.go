@@ -15,3 +15,7 @@ func Init() error {
 
 	return nil 
 }
+
+func Add() error {
+	return nil
+}
