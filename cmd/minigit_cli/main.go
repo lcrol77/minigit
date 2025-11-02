@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	INIT = "init"
-	ADD  = "add"
+	INIT     = "init"
+	ADD      = "add"
+	CAT_FILE = "cat-file"
 )
 
 func main() {
@@ -18,15 +19,13 @@ func main() {
 		fmt.Println("\tinit \tCreate an empty Mini Git repository or reinitialize an existing one")
 	}
 	args := args.New(os.Args)
-	cmd, _:= args.Next()
+	cmd, _ := args.Next()
 	switch cmd {
 	case INIT:
 		repo.Init()
 	case ADD:
-		fmt.Println(cmd)
 		for args.HasNext() {
-			cmd, _:= args.Next()
-			fmt.Println(cmd)
+			cmd, _ := args.Next()
 			repo.Add(cmd)
 		}
 	default:
