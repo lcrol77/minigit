@@ -11,27 +11,6 @@ import (
 	"os"
 )
 
-func Init() error {
-	err := os.Mkdir(".minigit", 0755)
-	if err != nil {
-		return err
-	}
-
-	os.Mkdir(".minigit/objects", 0755)
-	os.Mkdir(".minigit/commits", 0755)
-	os.Mkdir(".minigit/refs", 0755)
-	os.WriteFile(".minigit/HEAD", []byte("refs/heads/main"), 0644)
-	return nil
-}
-
-func Add(cmd string) error {
-	if cmd == "." {
-		return stageAllFiles()
-	} else {
-		return stageFile(cmd)
-	}
-}
-
 func stageAllFiles() error {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -42,28 +21,13 @@ func stageAllFiles() error {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if d.IsDir() && d.Name() == ".minigit"{
+		if d.IsDir() && d.Name() == ".minigit" {
 			return fs.SkipDir
 		}
-		stageFile(path)
+		WriteObjectFile(path)
 		return nil
 	})
 
-	return nil
-}
-
-func stageFile(filepath string) error {
-	fmt.Println(filepath)
-	data, err := os.ReadFile(filepath) // TODO: eventually replace this with os.Open
-	if err != nil {
-		return err
-	}
-	hashedFile := computeFileHash(&data)
-	compressed := compressData(data)
-	err = os.WriteFile(fmt.Sprintf(".minigit/objects/%x", hashedFile), compressed, 0644)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"minigit/cmd/minigit_cli/internal/repo"
+	"minigit/cmd/minigit_cli/internal"
 	"minigit/cmd/minigit_cli/utils/args"
 	"os"
 )
