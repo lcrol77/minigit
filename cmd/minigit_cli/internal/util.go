@@ -55,10 +55,9 @@ func decompressData(compressedData []byte) []byte {
 	return decompressed
 }
 
-func computeFileHash(data *[]byte) []byte {
+func computeHash(data *[]byte) []byte {
 	h := sha1.New()
 	h.Write(*data)
 	sum := h.Sum(nil)
-	fmt.Printf("SHA1: %x\n", sum)
 	return sum
 }

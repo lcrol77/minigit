@@ -21,7 +21,7 @@ func WriteObjectFile(filepath string) error {
 	if err != nil {
 		return err
 	}
-	hashedFile := computeFileHash(&data)
+	hashedFile := computeHash(&data)
 	compressed := compressData(data)
 	err = os.WriteFile(fmt.Sprintf(".minigit/objects/%x", hashedFile), compressed, 0644)
 	if err != nil {

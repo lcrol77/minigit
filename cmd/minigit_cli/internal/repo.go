@@ -11,8 +11,8 @@ func Init() error {
 	}
 
 	os.Mkdir(".minigit/objects", 0755)
-	os.Mkdir(".minigit/commits", 0755)
-	os.Mkdir(".minigit/refs", 0755)
+	//os.Mkdir(".minigit/commits", 0755)
+	//os.Mkdir(".minigit/refs", 0755)
 	os.WriteFile(".minigit/HEAD", []byte("refs/heads/main"), 0644)
 	return nil
 }
