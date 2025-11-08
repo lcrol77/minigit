@@ -1,10 +1,8 @@
-package repo
+package internal
 
 import (
 	"bytes"
 	"compress/zlib"
-	"crypto/sha1"
-	"fmt"
 	"io"
 	"io/fs"
 	"log"
@@ -31,33 +29,3 @@ func stageAllFiles() error {
 	return nil
 }
 
-func compressData(data []byte) []byte {
-	var buf bytes.Buffer
-	zw := zlib.NewWriter(&buf)
-	_, err := zw.Write(data)
-	if err != nil {
-		panic(err)
-	}
-	zw.Close()
-	return buf.Bytes()
-}
-
-func decompressData(compressedData []byte) []byte {
-	r, err := zlib.NewReader(bytes.NewReader(compressedData))
-	if err != nil {
-		panic(err)
-	}
-	defer r.Close()
-	decompressed, err := io.ReadAll(r)
-	if err != nil {
-		panic(err)
-	}
-	return decompressed
-}
-
-func computeHash(data *[]byte) []byte {
-	h := sha1.New()
-	h.Write(*data)
-	sum := h.Sum(nil)
-	return sum
-}
