@@ -1,9 +1,6 @@
 package internal
 
 import (
-	"bytes"
-	"compress/zlib"
-	"io"
 	"io/fs"
 	"log"
 	"os"
@@ -22,7 +19,7 @@ func stageAllFiles() error {
 		if d.IsDir() && d.Name() == ".minigit" {
 			return fs.SkipDir
 		}
-		WriteObjectFile(path)
+		WriteObjectFile(path, Blob)
 		return nil
 	})
 

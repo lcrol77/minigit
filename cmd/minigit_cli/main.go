@@ -22,11 +22,11 @@ func main() {
 	cmd, _ := args.Next()
 	switch cmd {
 	case INIT:
-		repo.Init()
+		internal.Init()
 	case ADD:
 		for args.HasNext() {
 			cmd, _ := args.Next()
-			repo.Add(cmd)
+			internal.Add(cmd)
 		}
 	default:
 		printNotRecongizedCommandError(cmd)

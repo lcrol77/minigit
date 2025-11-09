@@ -1,19 +1,14 @@
 package internal
 
-import (
-	"bytes"
-	"compress/zlib"
-	"crypto/sha1"
-	"fmt"
-	"io"
-	"os"
-)
-
 type ObjectTypes int
 const (
 	Blob ObjectTypes = iota
 	Tree
 )
+
+var ObjectTypesMap = map[ObjectTypes]string {
+	Blob: "blob",
+}
 
 type Object struct {
 	ObjectID Oid
@@ -21,7 +16,7 @@ type Object struct {
 }
 
 type Oid struct {
-	id *[]byte
+	Id *[]byte
 }
 
 func LookUpObject(oid Oid) *Object{

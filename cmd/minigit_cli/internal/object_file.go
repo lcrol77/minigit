@@ -8,26 +8,40 @@ import (
 	"os"
 )
 
+func ParseObjectFile(oid Oid)(objType ObjectTypes, content []byte, err error){
+	return 1, nil, nil
+}
 
-func ReadObjectFile(fileHash string) (*[]byte, error) {
-	fmt.Println(fileHash)
-	data, err := os.ReadFile(fileHash) // TODO: eventually replace this with os.Open
+func ReadObjectFile(oid Oid) ([]byte, error) {
+	hash := fmt.Sprintf("%x", oid.Id)
+	data, err := os.ReadFile(hash) // TODO: eventually replace this with os.Open
 	if err != nil {
 		return nil, err
 	}
-	decompressedData := decompressData(data)	
-	return &decompressedData, nil
+	r, err := zlib.NewReader(bytes.NewReader(data))
+	if err != nil {
+		panic(err)
+	}
+	defer r.Close()
+	var out bytes.Buffer
+	_, err = io.Copy(&out,r)
+	if err != nil {
+		panic(err)
+	}
+	return out.Bytes(), nil
 }
 
-func WriteObjectFile(filepath string) error {
+func WriteObjectFile(filepath string, objType ObjectTypes) error {
 	fmt.Println(filepath)
 	data, err := os.ReadFile(filepath) // TODO: eventually replace this with os.Open
 	if err != nil {
 		return err
 	}
-	hashedFile := computeHash(&data)
-	compressed := compressData(data)
-	err = os.WriteFile(fmt.Sprintf(".minigit/objects/%x", hashedFile), compressed, 0644)
+	header := fmt.Sprintf("%s %d\x00", ObjectTypesMap[objType], len(data))
+	store := append([]byte(header),data...)
+	fileHash := computeHash(&store)
+	compressed := compressData(store)
+	err = os.WriteFile(fmt.Sprintf(".minigit/objects/%x", fileHash), compressed, 0644)
 	if err != nil {
 		return err
 	}
@@ -43,17 +57,4 @@ func compressData(data []byte) []byte {
 	}
 	zw.Close()
 	return buf.Bytes()
-}
-
-func decompressData(compressedData []byte) []byte {
-	r, err := zlib.NewReader(bytes.NewReader(compressedData))
-	if err != nil {
-		panic(err)
-	}
-	defer r.Close()
-	decompressed, err := io.ReadAll(r)
-	if err != nil {
-		panic(err)
-	}
-	return decompressed
 }
