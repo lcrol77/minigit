@@ -37,6 +37,7 @@ func WriteObjectFile(filepath string, objType ObjectTypes) error {
 	if err != nil {
 		return err
 	}
+	// note: \x00 is the null char and seperates header from body
 	header := fmt.Sprintf("%s %d\x00", ObjectTypesMap[objType], len(data))
 	store := append([]byte(header),data...)
 	fileHash := computeHash(&store)
