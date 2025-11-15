@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func ParseObjectFile(oid Oid)(objType ObjectTypes, content []byte, err error){
+func ParseObjectFile(oid Oid) (objType ObjectTypes, content []byte, err error) {
 	return 1, nil, nil
 }
 
@@ -24,7 +24,7 @@ func ReadObjectFile(oid Oid) ([]byte, error) {
 	}
 	defer r.Close()
 	var out bytes.Buffer
-	_, err = io.Copy(&out,r)
+	_, err = io.Copy(&out, r)
 	if err != nil {
 		panic(err)
 	}
@@ -32,15 +32,12 @@ func ReadObjectFile(oid Oid) ([]byte, error) {
 }
 
 func WriteObjectFile(filepath string, objType ObjectTypes) error {
-	fmt.Println(filepath)
 	data, err := os.ReadFile(filepath) // TODO: eventually replace this with os.Open
 	if err != nil {
 		return err
 	}
-	// note: \x00 is the null char and seperates header from body
-	header := fmt.Sprintf("%s %d\x00", ObjectTypesMap[objType], len(data))
-	store := append([]byte(header),data...)
-	fileHash := computeHash(&store)
+	store := CreateDataStore(data, objType)
+	fileHash := ComputeHash(store)
 	compressed := compressData(store)
 	err = os.WriteFile(fmt.Sprintf(".minigit/objects/%x", fileHash), compressed, 0644)
 	if err != nil {
@@ -58,4 +55,14 @@ func compressData(data []byte) []byte {
 	}
 	zw.Close()
 	return buf.Bytes()
+}
+
+func CreateDataStore(data []byte, objType ObjectTypes) []byte {
+	header := generateHeader(data, objType)
+	store := append([]byte(header), data...)
+	return store
+}
+
+func generateHeader(data []byte, objType ObjectTypes) string {
+	return fmt.Sprintf("%s %d\x00", ObjectTypesMap[objType], len(data))
 }
