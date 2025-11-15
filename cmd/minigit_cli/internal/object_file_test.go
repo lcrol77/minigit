@@ -59,13 +59,14 @@ func TestParseObjectFile(t *testing.T) {
 	h := internal.ComputeHash(store)
 	oid := internal.Oid{Id: h}
 	oType, content, err := internal.ParseObjectFile(oid)
+
 	if err != nil {
 		t.Fatalf("Failed to parse obj file: %v", err)
 	}
 	if oType != internal.Blob {
 		t.Fatalf("wrong type: expected blob got %s", internal.ObjectTypesMap[oType])
 	}
-	if bytes.Equal(content,[]byte("test\n")){
+	if !bytes.Equal(content, []byte("test\n")) {
 		t.Fatalf("wrong contents:")
 	}
 }

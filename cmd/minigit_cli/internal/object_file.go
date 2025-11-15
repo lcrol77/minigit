@@ -6,15 +6,41 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 func ParseObjectFile(oid Oid) (objType ObjectTypes, content []byte, err error) {
-	return 1, nil, nil
+	raw, err := ReadObjectFile(oid)
+	if err != nil{
+		return objType, nil, err
+	}
+	spaceIdx := bytes.IndexByte(raw, ' ')
+	if spaceIdx < 0 {
+		return objType, nil, fmt.Errorf("invalid object header: no space delimeter")
+	}
+	objTypeString := string(raw[:spaceIdx])
+	objType, found := ObjectTypeFromString(objTypeString)
+	if !found {
+		return objType, nil, fmt.Errorf("invalid object header: no type found")
+	}
+
+	nullIdx := bytes.IndexByte(raw, 0)
+	if nullIdx < 0 {
+		return objType, nil, fmt.Errorf("invalid object header: no null byte found")
+	}
+
+	// Content starts just after the null byte
+	content = raw[nullIdx+1:]
+	return objType, content, nil
+}
+
+func getObjectFilePath(h string) (string) {
+	return filepath.Join(".minigit/objects/", h)
 }
 
 func ReadObjectFile(oid Oid) ([]byte, error) {
-	hash := fmt.Sprintf("%x", oid.Id)
-	data, err := os.ReadFile(hash) // TODO: eventually replace this with os.Open
+	path := getObjectFilePath(fmt.Sprintf("%x", oid.Id))
+	data, err := os.ReadFile(path) // TODO: eventually replace this with os.Open
 	if err != nil {
 		return nil, err
 	}
