@@ -8,6 +8,7 @@ const (
 
 var ObjectTypesMap = map[ObjectTypes]string {
 	Blob: "blob",
+	Tree: "tree",
 }
 
 type Object struct {
@@ -16,7 +17,7 @@ type Object struct {
 }
 
 type Oid struct {
-	Id *[]byte
+	Id []byte
 }
 
 func LookUpObject(oid Oid) *Object{
