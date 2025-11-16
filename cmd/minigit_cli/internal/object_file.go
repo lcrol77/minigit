@@ -11,7 +11,7 @@ import (
 
 func ParseObjectFile(oid Oid) (objType ObjectTypes, content []byte, err error) {
 	raw, err := ReadObjectFile(oid)
-	if err != nil{
+	if err != nil {
 		return objType, nil, err
 	}
 	spaceIdx := bytes.IndexByte(raw, ' ')
@@ -34,7 +34,7 @@ func ParseObjectFile(oid Oid) (objType ObjectTypes, content []byte, err error) {
 	return objType, content, nil
 }
 
-func getObjectFilePath(h string) (string) {
+func getObjectFilePath(h string) string {
 	return filepath.Join(".minigit/objects/", h)
 }
 
@@ -57,19 +57,22 @@ func ReadObjectFile(oid Oid) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func WriteObjectFile(filepath string, objType ObjectTypes) error {
+func WriteObjectFile(filepath string, objType ObjectTypes) (Oid, error) {
 	data, err := os.ReadFile(filepath) // TODO: eventually replace this with os.Open
 	if err != nil {
-		return err
+		return Oid{}, err
 	}
 	store := CreateDataStore(data, objType)
 	fileHash := ComputeHash(store)
 	compressed := compressData(store)
+	
+	oid := Oid{Id: fileHash}
+
 	err = os.WriteFile(fmt.Sprintf(".minigit/objects/%x", fileHash), compressed, 0644)
 	if err != nil {
-		return err
+		return Oid{}, err
 	}
-	return nil
+	return oid, nil
 }
 
 func compressData(data []byte) []byte {

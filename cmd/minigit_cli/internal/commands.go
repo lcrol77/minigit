@@ -20,7 +20,8 @@ func Add(cmd string) error {
 	if cmd == "." {
 		return stageAllFiles()
 	} else {
-		return WriteObjectFile(cmd, Blob)
+		_, err := WriteObjectFile(cmd, Blob)
+		return err
 	}
 }
 

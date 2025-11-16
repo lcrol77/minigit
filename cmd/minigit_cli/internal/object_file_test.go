@@ -5,68 +5,51 @@ import (
 	"fmt"
 	"minigit/cmd/minigit_cli/internal"
 	"minigit/cmd/minigit_cli/testutil"
-	"os"
 	"path/filepath"
 	"testing"
 )
 
-func TestWriteFile(t *testing.T) {
-	repo, err := testutil.InitializeTestingRepo()
-	defer testutil.CleanUpRepo()
+func TestWriteObjectFile(t *testing.T) {
+	repo, cleanup := testutil.SetupAndChdir(t)
+	defer cleanup()
+
+	testFile := filepath.Join(repo, "test.txt")
+	oid, err := internal.WriteObjectFile(testFile, internal.Blob)
 	if err != nil {
-		t.Fatalf("failed to initialize the repo: %v", err)
-	}
-	err = os.Chdir(repo)
-	if err != nil {
-		t.Fatalf("failed to initialize the repo: %v", err)
+		t.Fatalf("WriteObjectFile failed: %v", err)
 	}
 
-	fp := filepath.Join(repo, "test.txt")
-	err = internal.WriteObjectFile(fp, internal.Blob)
+	objectPath := filepath.Join(repo, fmt.Sprintf(".minigit/objects/%x", oid.Id))
+	exists, err := testutil.Exists(objectPath)
 	if err != nil {
-		t.Fatalf("Failed to write obj file: %v", err)
+		t.Fatalf("Exists failed: %v", err)
 	}
-
-	store := internal.CreateDataStore([]byte("test\n"), internal.Blob)
-	h := internal.ComputeHash(store)
-	path := filepath.Join(repo, fmt.Sprintf(".minigit/objects/%x", h))
-	e, err := testutil.Exists(path)
-	if err != nil {
-		t.Fatalf("failed to write with error: %v", err)
-	}
-	if !e {
-		t.Fatalf("failed to write: expected %s to exist", path)
+	if !exists {
+		t.Errorf("Expected object file %s to exist, but it does not", objectPath)
 	}
 }
 
 func TestParseObjectFile(t *testing.T) {
-	repo, err := testutil.InitializeTestingRepo()
-	defer testutil.CleanUpRepo()
+	repo, cleanup := testutil.SetupAndChdir(t)
+	defer cleanup()
+
+	testFile := filepath.Join(repo, "test.txt")
+	oid, err := internal.WriteObjectFile(testFile, internal.Blob)
 	if err != nil {
-		t.Fatalf("failed to initialize the repo: %v", err)
-	}
-	err = os.Chdir(repo)
-	if err != nil {
-		t.Fatalf("failed to initialize the repo: %v", err)
+		t.Fatalf("WriteObjectFile failed: %v", err)
 	}
 
-	fp := filepath.Join(repo, "test.txt")
-	err = internal.WriteObjectFile(fp, internal.Blob)
+	objType, content, err := internal.ParseObjectFile(oid)
 	if err != nil {
-		t.Fatalf("Failed to write obj file: %v", err)
+		t.Fatalf("ParseObjectFile failed: %v", err)
 	}
-	store := internal.CreateDataStore([]byte("test\n"), internal.Blob)
-	h := internal.ComputeHash(store)
-	oid := internal.Oid{Id: h}
-	oType, content, err := internal.ParseObjectFile(oid)
 
-	if err != nil {
-		t.Fatalf("Failed to parse obj file: %v", err)
+	if objType != internal.Blob {
+		t.Errorf("Expected type Blob, got %s", internal.ObjectTypesMap[objType])
 	}
-	if oType != internal.Blob {
-		t.Fatalf("wrong type: expected blob got %s", internal.ObjectTypesMap[oType])
-	}
-	if !bytes.Equal(content, []byte("test\n")) {
-		t.Fatalf("wrong contents:")
+
+	expectedContent := []byte("test\n")
+	if !bytes.Equal(content, expectedContent) {
+		t.Errorf("Expected content %q, got %q", expectedContent, content)
 	}
 }

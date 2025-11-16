@@ -9,40 +9,47 @@ import (
 )
 
 func TestInitializeRepo(t *testing.T) {
-	testCases := []string{
+	_, cleanup := setupEmptyRepoDir(t) // setup repo without initializing it
+	defer cleanup()
+
+	// Now call Init() to create the repo structure
+	if err := internal.Init(); err != nil {
+		t.Fatalf("Error initializing repo: %v", err)
+	}
+
+	// List of files and directories we expect after initialization
+	expectedPaths := []string{
 		".minigit/objects",
 		".minigit/commits",
 		".minigit/refs",
 		".minigit/HEAD",
 	}
-	tmpDir := os.TempDir()
-	err := os.Chdir(tmpDir)
-	if err != nil {
-		t.Fatalf("could not make tmpdir: %v", err)
-	}
-	err = os.Mkdir("repo", 0755)
-	if err != nil {
-		t.Fatalf("could not make tmpdir: %v", err)
-	}
-	defer testutil.CleanUpRepo()
 
-	tmpDir = filepath.Join(tmpDir, "repo")
-	err = os.Chdir(tmpDir)
-	if err != nil {
-		t.Fatalf("Could change to %s: %v", tmpDir,err)
-	}
-
-	err = internal.Init()
-	if err != nil {
-		t.Fatalf("Error initializing repo: %v", err)
-	}
-	for _, path := range testCases {
-		exist, err := testutil.Exists(path)
-		if err != nil {
-			t.Fatalf("repo malformed with error: %v", err)
-		}
-		if !exist {
-			t.Fatalf("repo malformed: expected %s to exist", path)
+	for _, path := range expectedPaths {
+		if exists, err := testutil.Exists(path); err != nil {
+			t.Fatalf("Error checking %s: %v", path, err)
+		} else if !exists {
+			t.Fatalf("Expected %s to exist, but it does not", path)
 		}
 	}
+}
+
+// setupEmptyRepoDir creates a temporary repo directory without calling Init.
+// It returns the repo path and a cleanup function.
+func setupEmptyRepoDir(t *testing.T) (string, func()) {
+	tmpDir := filepath.Join(os.TempDir(), "repo-init-test")
+	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+		t.Fatalf("could not create test repo dir: %v", err)
+	}
+
+	if err := os.Chdir(tmpDir); err != nil {
+		t.Fatalf("could not chdir to repo: %v", err)
+	}
+
+	cleanup := func() {
+		if err := os.RemoveAll(tmpDir); err != nil {
+			t.Logf("cleanup failed: %v", err)
+		}
+	}
+	return tmpDir, cleanup
 }
